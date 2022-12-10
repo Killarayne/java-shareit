@@ -17,48 +17,49 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final ItemMapper itemMapper;
 
 
     @Override
     public ItemDto createItem(ItemDto itemDto) {
         if (!itemDto.getAvailable()) {
-            log.warn("Нельзя создать вещь недоступной");
+            log.warn("Can't create an item unavailable");
             throw new NotAvailableItemException();
         }
         if (userRepository.getUsers().values().stream().noneMatch(x -> x.getId() == itemDto.getOwner().getId())) {
-            log.warn("Пользователья с айди " + itemDto.getOwner().getName() + " не существует, невозможно создать вещь");
+            log.warn("User with id " + itemDto.getOwner().getName() + " not exist, can't create item");
             throw new UserNotFoundException();
         }
-        log.debug("Создана вещь :" + itemDto.getName());
-        return itemRepository.createItem(ItemMapper.INSTANCE.toModel(itemDto));
+        log.debug("Created item :" + itemDto.getName());
+        return itemRepository.createItem(itemMapper.toModel(itemDto));
     }
 
     @Override
     public ItemDto updateItem(ItemDto itemDto) {
 
         if (itemRepository.getItems().get(itemDto.getId()).getOwner().getId() != itemDto.getOwner().getId()) {
-            log.warn("Пользователья с айди " + itemDto.getOwner().getName() + " не существует, невозможно обновить вещь");
+            log.warn("User with id " + itemDto.getOwner().getName() + " not exist, can't create item");
             throw new UserNotFoundException();
         }
-        log.debug("Обновлена вещь с id: " + itemDto.getId());
-        return itemRepository.updateItem(ItemMapper.INSTANCE.toModel(itemDto));
+        log.debug("Updated item with id: " + itemDto.getId());
+        return itemRepository.updateItem(itemMapper.toModel(itemDto));
     }
 
     @Override
     public ItemDto getItem(long itemId) {
-        log.debug("Получена вещь с id: " + itemId);
+        log.debug("Received item with id: " + itemId);
         return itemRepository.getItem(itemId);
     }
 
     @Override
     public List<ItemDto> getItemsByUser(long userId) {
-        log.debug("Получен список вещей у пользователя с id: " + userId);
+        log.debug("Received list of items by user id: " + userId);
         return itemRepository.getItemsByUser(userId);
     }
 
     @Override
     public List<ItemDto> searchItem(String text) {
-        log.debug("Получен список вещей содержавших символы:" + text);
+        log.debug("Received a list of things containing symbols:" + text);
         return itemRepository.searchItem(text);
     }
 }

@@ -14,19 +14,18 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleExistUser(final UserAlreadyExistException e) {
-        return new ErrorResponse("Пользователь уже существует.");
-
+        return new ErrorResponse("User already exists.");
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotExistUser(final UserNotFoundException e) {
-        return new ErrorResponse("Пользователь не найден.");
+        return new ErrorResponse("User not found.");
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleNotAvailable(final NotAvailableItemException e) {
-        return new ErrorResponse("Предмет не доступен.");
+        return new ErrorResponse("Item is unavailable.");
     }
 }

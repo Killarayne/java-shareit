@@ -15,41 +15,43 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
 
+    private final UserMapper userMapper;
+
     @Override
     public UserDto createUser(UserDto userDto) {
         if (repository.getUsers().values().stream().anyMatch(x -> x.getEmail().equals(userDto.getEmail()))) {
-            log.warn("Пользовательн с email " + userDto.getEmail() + " уже существует");
+            log.warn("User with id: " + userDto.getEmail() + " already exists");
             throw new UserAlreadyExistException();
         }
-        log.debug("Пользователь с email " + userDto.getEmail() + " создан");
-        return repository.createUser(UserMapper.INSTANCE.toModel(userDto));
+        log.debug("User with email " + userDto.getEmail() + " created");
+        return repository.createUser(userMapper.toModel(userDto));
     }
 
     @Override
     public UserDto updateUser(long userId, UserDto userDto) {
         if (repository.getUsers().values().stream().anyMatch(x -> x.getEmail().equals(userDto.getEmail()))) {
-            log.warn("Пользовательн с email " + userDto.getEmail() + " уже существует");
+            log.warn("User with email " + userDto.getEmail() + " already exists");
             throw new UserAlreadyExistException();
         }
-        log.debug("Пользователь с email " + userDto.getEmail() + " обновлен");
-        return repository.updateUser(userId, UserMapper.INSTANCE.toModel(userDto));
+        log.debug("user with email " + userDto.getEmail() + " updated");
+        return repository.updateUser(userId, userMapper.toModel(userDto));
     }
 
     @Override
     public UserDto getUser(long userId) {
-        log.debug("Получен пользователь с id " + userId);
+        log.debug("Received user with id " + userId);
         return repository.getUser(userId);
     }
 
     @Override
     public void deleteUser(long userId) {
-        log.debug("Удален пользователь с id " + userId);
+        log.debug("Deleted user with id " + userId);
         repository.deleteUser(userId);
     }
 
     @Override
     public List<UserDto> getUsers() {
-        log.debug("Получены все пользователи");
-        return repository.getUsers().values().stream().map(UserMapper.INSTANCE::toItemDto).collect(Collectors.toList());
+        log.debug("Received all users");
+        return repository.getUsers().values().stream().map(userMapper::toItemDto).collect(Collectors.toList());
     }
 }

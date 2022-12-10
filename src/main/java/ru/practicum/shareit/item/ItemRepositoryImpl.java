@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -11,11 +12,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class ItemRepositoryImpl implements ItemRepository {
 
-    long generatedId = 0L;
+    private final ItemMapper itemMapper;
 
-    Map<Long, Item> items = new HashMap<>();
+    private long generatedId = 0L;
+
+    private final Map<Long, Item> items = new HashMap<>();
+
 
     @Override
     public Map<Long, Item> getItems() {
@@ -26,7 +31,7 @@ public class ItemRepositoryImpl implements ItemRepository {
     public ItemDto createItem(Item item) {
         item.setId(++generatedId);
         items.put(item.getId(), item);
-        return ItemMapper.INSTANCE.toItemDto(item);
+        return itemMapper.toItemDto(item);
     }
 
 
@@ -51,23 +56,23 @@ public class ItemRepositoryImpl implements ItemRepository {
             items.get(item.getId()).setAvailable(item.getAvailable());
         }
 
-        return ItemMapper.INSTANCE.toItemDto(items.get(item.getId()));
+        return itemMapper.toItemDto(items.get(item.getId()));
     }
 
     @Override
     public ItemDto getItem(long itemId) {
-        return ItemMapper.INSTANCE.toItemDto(items.get(itemId));
+        return itemMapper.toItemDto(items.get(itemId));
     }
 
     @Override
     public List<ItemDto> getItemsByUser(long userId) {
-        return items.values().stream().map(ItemMapper.INSTANCE::toItemDto).filter(x -> x.getOwner().getId() == userId).collect(Collectors.toList());
+        return items.values().stream().map(itemMapper::toItemDto).filter(x -> x.getOwner().getId() == userId).collect(Collectors.toList());
     }
 
     @Override
     public List<ItemDto> searchItem(String text) {
         if (!text.equals("")) {
-            return items.values().stream().map(ItemMapper.INSTANCE::toItemDto).filter(x -> x.getName().toLowerCase().contains(text.toLowerCase()) && x.getAvailable() ||
+            return items.values().stream().map(itemMapper::toItemDto).filter(x -> x.getName().toLowerCase().contains(text.toLowerCase()) && x.getAvailable() ||
                     x.getDescription().toLowerCase().contains(text.toLowerCase()) && x.getAvailable()).collect(Collectors.toList());
         } else {
             return new ArrayList<>();

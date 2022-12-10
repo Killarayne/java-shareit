@@ -1,16 +1,20 @@
 package ru.practicum.shareit.user;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@RequiredArgsConstructor
 public class UserRepositoryImpl implements UserRepository {
 
-    long generatedId = 0L;
+    private final UserMapper userMapper;
 
-    Map<Long, User> users = new HashMap<>();
+    private long generatedId = 0L;
+
+    private final Map<Long, User> users = new HashMap<>();
 
     @Override
     public Map<Long, User> getUsers() {
@@ -21,7 +25,7 @@ public class UserRepositoryImpl implements UserRepository {
     public UserDto createUser(User user) {
         user.setId(++generatedId);
         users.put(user.getId(), user);
-        return UserMapper.INSTANCE.toItemDto(user);
+        return userMapper.toItemDto(user);
     }
 
     @Override
@@ -33,12 +37,12 @@ public class UserRepositoryImpl implements UserRepository {
 
             users.get(userId).setEmail(user.getEmail());
         }
-        return UserMapper.INSTANCE.toItemDto(users.get(userId));
+        return userMapper.toItemDto(users.get(userId));
     }
 
     @Override
     public UserDto getUser(long userId) {
-        return UserMapper.INSTANCE.toItemDto(users.get(userId));
+        return userMapper.toItemDto(users.get(userId));
     }
 
     @Override
