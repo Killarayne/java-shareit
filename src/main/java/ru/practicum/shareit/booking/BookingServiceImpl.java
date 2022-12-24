@@ -46,7 +46,7 @@ public class BookingServiceImpl implements BookingSerivce {
             throw new ItemNotExistsException();
         }
 
-        if (item.get().getOwnerId() == userId) {
+        if (item.get().getOwnerId().equals(userId)) {
             log.warn("Owner can't create booking");
             throw new UserNotFoundException();
         }
@@ -77,7 +77,7 @@ public class BookingServiceImpl implements BookingSerivce {
                 log.warn("Can't approve booking with status approved");
                 throw new WrongBookingStatusException();
             }
-            if (booking.get().getItem().getOwnerId() == userId) {
+            if (booking.get().getItem().getOwnerId().equals(userId)) {
                 if (approve) {
                     log.debug("status checkout to approved");
                     booking.get().setStatus(Status.APPROVED);
@@ -108,7 +108,7 @@ public class BookingServiceImpl implements BookingSerivce {
             throw new BookingNotExistException();
         }
 
-        if (booking.get().getBooker().getId() == userId || booking.get().getItem().getOwnerId() == userId) {
+        if (booking.get().getBooker().getId().equals(userId)  || booking.get().getItem().getOwnerId().equals(userId)) {
             log.debug("Received booking with id: " + bookingId);
             return booking.get();
         } else {
@@ -165,8 +165,8 @@ public class BookingServiceImpl implements BookingSerivce {
                         .filter(x -> x.getStatus().equals(Status.REJECTED))
                         .sorted(Comparator.comparing(Booking::getStart).reversed()).collect(Collectors.toList());
             default:
-                return listToMap.stream().
-                        sorted(Comparator.comparing(Booking::getStart).reversed()).collect(Collectors.toList());
+                return listToMap.stream()
+                        .sorted(Comparator.comparing(Booking::getStart).reversed()).collect(Collectors.toList());
 
         }
     }
