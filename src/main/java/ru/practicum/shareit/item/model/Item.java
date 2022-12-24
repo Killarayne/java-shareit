@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Data
 @AllArgsConstructor
@@ -14,6 +15,7 @@ import javax.persistence.*;
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @NotNull
     private long id;
     @Column(name = "name")
     private String name;

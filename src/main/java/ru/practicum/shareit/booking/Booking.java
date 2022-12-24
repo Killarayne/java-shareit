@@ -34,7 +34,7 @@ public class Booking {
     @JoinColumn(name = "item_id", referencedColumnName = "id")
     private Item item;
     @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "booker_id", referencedColumnName = "id")
     private User booker;
 
     @Enumerated(EnumType.STRING)
