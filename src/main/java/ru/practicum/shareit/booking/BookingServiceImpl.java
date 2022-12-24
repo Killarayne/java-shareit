@@ -165,8 +165,8 @@ public class BookingServiceImpl implements BookingSerivce {
                         .filter(x -> x.getStatus().equals(Status.REJECTED))
                         .sorted(Comparator.comparing(Booking::getStart).reversed()).collect(Collectors.toList());
             default:
-                return listToMap.stream().
-                        sorted(Comparator.comparing(Booking::getStart).reversed()).collect(Collectors.toList());
+                return listToMap.stream()
+                        .sorted(Comparator.comparing(Booking::getStart).reversed()).collect(Collectors.toList());
 
         }
     }
