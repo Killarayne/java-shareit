@@ -3,55 +3,60 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exceptions.UserAlreadyExistException;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exceptions.UserNotFoundException;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserServiceImpl implements UserService {
-
     private final UserRepository repository;
 
-    private final UserMapper userMapper;
-
     @Override
-    public UserDto createUser(UserDto userDto) {
-        if (repository.getUsers().values().stream().anyMatch(x -> x.getEmail().equals(userDto.getEmail()))) {
-            log.warn("User with id: " + userDto.getEmail() + " already exists");
-            throw new UserAlreadyExistException();
-        }
-        log.debug("User with email " + userDto.getEmail() + " created");
-        return repository.createUser(userMapper.toModel(userDto));
+    public User createUser(User user) {
+        log.debug("User with email " + user.getEmail() + " created");
+        return repository.save(user);
     }
 
     @Override
-    public UserDto updateUser(long userId, UserDto userDto) {
-        if (repository.getUsers().values().stream().anyMatch(x -> x.getEmail().equals(userDto.getEmail()))) {
-            log.warn("User with email " + userDto.getEmail() + " already exists");
-            throw new UserAlreadyExistException();
-        }
-        log.debug("user with email " + userDto.getEmail() + " updated");
-        return repository.updateUser(userId, userMapper.toModel(userDto));
+    public User updateUser(long userId, User user) {
+
+        User updatedUser = repository.findById(userId).get();
+        if (user.getEmail() != null)
+            updatedUser.setEmail(user.getEmail());
+
+        if (user.getName() != null)
+            updatedUser.setName(user.getName());
+
+        repository.save(updatedUser);
+        log.debug("user with email " + updatedUser.getEmail() + " updated");
+        return updatedUser;
     }
 
     @Override
-    public UserDto getUser(long userId) {
+    public User getUser(long userId) {
+        Optional<User> user = repository.findById(userId);
+        if (!user.isPresent()) {
+            throw new UserNotFoundException();
+        }
         log.debug("Received user with id " + userId);
-        return repository.getUser(userId);
+        return user.get();
     }
+
 
     @Override
     public void deleteUser(long userId) {
         log.debug("Deleted user with id " + userId);
-        repository.deleteUser(userId);
+        repository.deleteById(userId);
     }
 
     @Override
-    public List<UserDto> getUsers() {
+    public List<User> getUsers() {
         log.debug("Received all users");
-        return repository.getUsers().values().stream().map(userMapper::toItemDto).collect(Collectors.toList());
+        return repository.findAll();
     }
 }

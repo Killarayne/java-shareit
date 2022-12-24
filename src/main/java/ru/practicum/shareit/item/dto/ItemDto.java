@@ -4,23 +4,28 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import ru.practicum.shareit.Create;
-import ru.practicum.shareit.request.ItemRequest;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.booking.dto.ItemBookingDto;
 
 import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 @Getter
 @Setter
 @AllArgsConstructor
 public class ItemDto {
-    private long id;
+    private Long id;
     @NotBlank(groups = Create.class)
     private String name;
     @NotBlank(groups = Create.class)
     private String description;
-    private User owner;
     private Boolean available;
-    private ItemRequest request;
+    private ItemBookingDto lastBooking;
+    private ItemBookingDto nextBooking;
+
+    private Long ownerId;
+    private Long requestId;
+
+    private List<UserCommentDto> comments;
 
 
 }
