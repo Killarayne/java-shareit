@@ -42,7 +42,7 @@ public class ItemServiceImpl implements ItemService {
             log.warn("Can't create an item unavailable");
             throw new NotAvailableItemException();
         }
-        if (userRepository.findAll().stream().noneMatch(x -> x.getId() == item.getOwnerId())) {
+        if (userRepository.findAll().stream().noneMatch(x -> x.getId().equals(item.getOwnerId()))) {
             log.warn("User with id " + item.getOwnerId() + " not exist, can't create item");
             throw new UserNotFoundException();
         }
@@ -78,7 +78,7 @@ public class ItemServiceImpl implements ItemService {
     public ItemDto getItem(Long userId, Long itemId) {
         Optional<Item> newItem = itemRepository.findById(itemId);
         if (newItem.isPresent()) {
-            if (newItem.get().getOwnerId() == userId) {
+            if (newItem.get().getOwnerId().equals(userId)) {
                 ItemDto itemDto = itemToItemWithLastAndNextBooking(newItem.get());
                 itemDto.setComments(commentRepository.findAllByItem_Id(itemDto.getId()).stream()
                         .map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
@@ -149,7 +149,7 @@ public class ItemServiceImpl implements ItemService {
             throw new WrongTextOfCommentException();
         }
 
-        if (bookingList.stream().filter(x -> x.getStart().isAfter(LocalDateTime.now())).sorted(Comparator.comparing(Booking::getStart)).findFirst().get().getBooker().getId() != userId) {
+        if (!bookingList.stream().filter(x -> x.getStart().isAfter(LocalDateTime.now())).sorted(Comparator.comparing(Booking::getStart)).findFirst().get().getBooker().getId().equals(userId)) {
             log.warn("Can't create comment by booker if his booking after when next booking");
             throw new IncorrectCreatorOfComment();
         }
