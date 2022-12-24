@@ -51,6 +51,7 @@ public class ErrorHandler {
     public ErrorResponse handleWrongBookingStatus(final WrongBookingStatusException e) {
         return new ErrorResponse("Wrong booking status.");
     }
+
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleWrongTime(final WrongTimeException e) {
