@@ -20,23 +20,20 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class Booking {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
     @Column(name = "start_time")
     private LocalDateTime start;
-
     @Column(name = "end_time")
     private LocalDateTime end;
-
     @OneToOne
     @JoinColumn(name = "item_id", referencedColumnName = "id")
     private Item item;
     @OneToOne
     @JoinColumn(name = "booker_id", referencedColumnName = "id")
     private User booker;
-
     @Enumerated(EnumType.STRING)
     private Status status;
 

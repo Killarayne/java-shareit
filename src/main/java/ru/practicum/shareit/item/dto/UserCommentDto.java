@@ -8,13 +8,10 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class UserCommentDto {
+
     private Long id;
-
     private String text;
-
     private String authorName;
-
-
     private LocalDateTime created;
 
     public UserCommentDto(Long id, String text, String authorName) {
@@ -23,4 +20,5 @@ public class UserCommentDto {
         this.authorName = authorName;
         this.created = LocalDateTime.now();
     }
+
 }

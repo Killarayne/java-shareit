@@ -13,6 +13,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 public class ItemDto {
+
     private Long id;
     @NotBlank(groups = Create.class)
     private String name;
@@ -21,11 +22,8 @@ public class ItemDto {
     private Boolean available;
     private ItemBookingDto lastBooking;
     private ItemBookingDto nextBooking;
-
     private Long ownerId;
     private Long requestId;
-
     private List<UserCommentDto> comments;
-
 
 }

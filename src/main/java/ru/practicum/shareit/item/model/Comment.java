@@ -15,17 +15,17 @@ import javax.persistence.*;
 @Getter
 @Setter
 public class Comment {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(name = "text")
     private String text;
     @OneToOne
     @JoinColumn(name = "author_id", referencedColumnName = "id")
     private User author;
-
     @OneToOne
     @JoinColumn(name = "item_id", referencedColumnName = "id")
     private Item item;
+
 }

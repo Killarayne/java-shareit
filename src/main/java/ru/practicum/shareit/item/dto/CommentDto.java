@@ -7,15 +7,11 @@ import ru.practicum.shareit.user.User;
 @Data
 public class CommentDto {
 
-
     private Long id;
-
     private String text;
-
     private User author;
-
-
     private Item item;
+
 }
 
 

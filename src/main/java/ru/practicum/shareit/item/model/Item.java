@@ -13,6 +13,7 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name = "items", schema = "public")
 public class Item {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @NotNull
@@ -27,6 +28,5 @@ public class Item {
     private Long ownerId;
     @Column(name = "request_id")
     private Long requestId;
-
 
 }

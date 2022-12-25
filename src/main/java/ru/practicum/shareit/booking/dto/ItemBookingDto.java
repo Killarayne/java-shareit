@@ -8,7 +8,8 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class ItemBookingDto {
-    private Long id;
 
+    private Long id;
     private Long bookerId;
+
 }

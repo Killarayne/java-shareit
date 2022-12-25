@@ -9,7 +9,6 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.UserCommentDto;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @RestController
@@ -18,8 +17,6 @@ import java.util.stream.Collectors;
 public class ItemController {
 
     private final ItemService service;
-    private final ItemMapper itemMapper;
-    private final CommentMapper commentMapper;
 
     @PostMapping
     public ItemDto createItem(@RequestHeader("X-Sharer-User-Id") long userId, @RequestBody @Validated(Create.class) ItemDto itemDto) {
@@ -27,8 +24,7 @@ public class ItemController {
             itemDto.setAvailable(false);
         }
         itemDto.setOwnerId(userId);
-
-        return itemMapper.toItemDto(service.createItem(itemMapper.toModel(itemDto)));
+        return service.createItem(itemDto);
     }
 
     @PatchMapping("/{itemId}")
@@ -36,7 +32,7 @@ public class ItemController {
         if (itemDto.getId() == null) {
             itemDto.setId(itemId);
         }
-        return itemMapper.toItemDto(service.updateItem(userId, itemMapper.toModel(itemDto)));
+        return service.updateItem(userId, itemDto);
     }
 
     @GetMapping("/{itemId}")
@@ -51,14 +47,12 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDto> searchItem(@RequestParam(value = "text") String text) {
-        return service.searchItem(text).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
+        return service.searchItem(text);
     }
-
 
     @PostMapping("/{itemId}/comment")
     public UserCommentDto createComment(@RequestHeader("X-Sharer-User-Id") Long userId, @PathVariable Long itemId, @RequestBody CommentDto commentDto) {
-        return commentMapper.toUserCommentDto(service.createComment(userId, itemId, commentMapper.toCommentModel(commentDto)));
+        return service.createComment(userId, itemId, commentDto);
     }
-
 
 }

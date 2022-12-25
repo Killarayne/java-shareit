@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.UserBookingDto;
 import ru.practicum.shareit.exceptions.*;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
@@ -23,13 +25,16 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingSerivce {
 
     private final BookingRepository bookingRepository;
+
     private final ItemRepository itemRepository;
+
+    private final BookingMapper bookingMapper;
 
     private final UserRepository userRepository;
 
     @Override
-
-    public Booking createBooking(Long userId, Booking booking) {
+    public UserBookingDto createBooking(Long userId, BookingDto bookingDto) {
+        Booking booking = bookingMapper.toBookingModel(bookingDto);
         booking.setBooker(new User());
         booking.getBooker().setId(userId);
         booking.setStatus(Status.WAITING);
@@ -64,11 +69,11 @@ public class BookingServiceImpl implements BookingSerivce {
 
         booking.setItem(item.get());
         log.debug("Booking added");
-        return bookingRepository.save(booking);
+        return bookingMapper.toUserBookingDto(bookingRepository.save(booking));
     }
 
     @Override
-    public Booking approve(Long userId, Long id, Boolean approve) {
+    public UserBookingDto approve(Long userId, Long id, Boolean approve) {
         Optional<Booking> booking = bookingRepository.findById(id);
 
 
@@ -94,14 +99,11 @@ public class BookingServiceImpl implements BookingSerivce {
             throw new BookingNotExistException();
         }
         log.debug("Booking approved");
-        return bookingRepository.save(booking.get());
-
-
+        return bookingMapper.toUserBookingDto(bookingRepository.save(booking.get()));
     }
 
-
     @Override
-    public Booking getBooking(Long userId, Long bookingId) {
+    public UserBookingDto getBooking(Long userId, Long bookingId) {
         Optional<Booking> booking = bookingRepository.findById(bookingId);
         if (!booking.isPresent()) {
             log.warn("Booking is not exist");
@@ -110,37 +112,36 @@ public class BookingServiceImpl implements BookingSerivce {
 
         if (booking.get().getBooker().getId().equals(userId) || booking.get().getItem().getOwnerId().equals(userId)) {
             log.debug("Received booking with id: " + bookingId);
-            return booking.get();
+            return bookingMapper.toUserBookingDto(booking.get());
         } else {
             log.warn("Booking can be received only by booker or owner");
             throw new UserNotFoundException();
         }
-
     }
 
 
     @Override
-    public List<Booking> getBookingsByBooker(Long userId, State state) {
+    public List<UserBookingDto> getBookingsByBooker(Long userId, State state) {
         if (!userRepository.findById(userId).isPresent()) {
             log.warn("Booker is not found");
             throw new UserNotFoundException();
         }
         log.debug("Received bookings by booker id: " + userId);
-        return mapListToListWithState(bookingRepository.findBookingsByBooker_Id(userId), state);
+        return mapListToListWithState(bookingRepository.findBookingsByBooker_Id(userId), state)
+                .stream().map(bookingMapper::toUserBookingDto).collect(Collectors.toList());
 
     }
 
     @Override
-    public List<Booking> getBookingsByOwner(Long ownerId, State state) {
+    public List<UserBookingDto> getBookingsByOwner(Long ownerId, State state) {
         if (!userRepository.findById(ownerId).isPresent()) {
             log.warn("Owner is not found");
             throw new UserNotFoundException();
         }
         log.debug("Received bookings by owner id: " + ownerId);
-        return mapListToListWithState(bookingRepository.findBookingsByOwner_Id(ownerId), state);
-
+        return mapListToListWithState(bookingRepository.findBookingsByOwner_Id(ownerId), state)
+                .stream().map(bookingMapper::toUserBookingDto).collect(Collectors.toList());
     }
-
 
     private List<Booking> mapListToListWithState(List<Booking> listToMap, State state) {
         switch (state) {

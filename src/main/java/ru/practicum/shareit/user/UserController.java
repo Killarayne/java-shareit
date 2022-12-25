@@ -7,7 +7,6 @@ import ru.practicum.shareit.Create;
 import ru.practicum.shareit.Update;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 @RestController
@@ -20,17 +19,17 @@ public class UserController {
 
     @PostMapping
     public UserDto createUser(@Validated({Create.class}) @RequestBody UserDto userDto) {
-        return userMapper.toUserDto(service.createUser(userMapper.toModel(userDto)));
+        return service.createUser(userDto);
     }
 
     @PatchMapping("/{userId}")
     public UserDto updateUser(@PathVariable long userId, @RequestBody @Validated({Update.class}) UserDto userDto) {
-        return userMapper.toUserDto(service.updateUser(userId, userMapper.toModel(userDto)));
+        return service.updateUser(userId, userDto);
     }
 
     @GetMapping("/{userId}")
     public UserDto getUser(@PathVariable long userId) {
-        return userMapper.toUserDto(service.getUser(userId));
+        return service.getUser(userId);
     }
 
     @DeleteMapping("/{userId}")
@@ -40,8 +39,7 @@ public class UserController {
 
     @GetMapping
     public List<UserDto> getUsers() {
-        return service.getUsers().stream().map(userMapper::toUserDto).collect(Collectors.toList());
+        return service.getUsers();
     }
-
 
 }

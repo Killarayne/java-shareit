@@ -8,45 +8,52 @@ import ru.practicum.shareit.exceptions.UserNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class UserServiceImpl implements UserService {
+
     private final UserRepository repository;
+    private final UserMapper userMapper;
 
     @Override
-    public User createUser(User user) {
-        log.debug("User with email " + user.getEmail() + " created");
-        return repository.save(user);
+    public UserDto createUser(UserDto userDto) {
+        log.debug("User with email " + userDto.getEmail() + " created");
+        return userMapper.toUserDto(repository.save(userMapper.toModel(userDto)));
     }
 
     @Override
-    public User updateUser(long userId, User user) {
-
-        User updatedUser = repository.findById(userId).get();
+    public UserDto updateUser(long userId, UserDto userDto) {
+        User user = userMapper.toModel(userDto);
+        Optional<User> updatedUser = repository.findById(userId);
+        if (!updatedUser.isPresent()) {
+            log.warn("User is not exist");
+            throw new UserNotFoundException();
+        }
         if (user.getEmail() != null)
-            updatedUser.setEmail(user.getEmail());
+            updatedUser.get().setEmail(user.getEmail());
 
         if (user.getName() != null)
-            updatedUser.setName(user.getName());
+            updatedUser.get().setName(user.getName());
 
-        repository.save(updatedUser);
-        log.debug("user with email " + updatedUser.getEmail() + " updated");
-        return updatedUser;
+        repository.save(updatedUser.get());
+        log.debug("user with email " + updatedUser.get().getEmail() + " updated");
+        return userMapper.toUserDto(updatedUser.get());
     }
 
     @Override
-    public User getUser(long userId) {
+    public UserDto getUser(long userId) {
         Optional<User> user = repository.findById(userId);
         if (!user.isPresent()) {
+            log.warn("User is not exist");
             throw new UserNotFoundException();
         }
         log.debug("Received user with id " + userId);
-        return user.get();
+        return userMapper.toUserDto(user.get());
     }
-
 
     @Override
     public void deleteUser(long userId) {
@@ -55,8 +62,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> getUsers() {
+    public List<UserDto> getUsers() {
         log.debug("Received all users");
-        return repository.findAll();
+        return repository.findAll().stream().map(userMapper::toUserDto).collect(Collectors.toList());
     }
+
 }
