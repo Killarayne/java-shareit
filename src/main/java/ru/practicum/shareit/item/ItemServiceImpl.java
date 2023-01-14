@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
@@ -43,7 +44,7 @@ public class ItemServiceImpl implements ItemService {
             log.warn("Can't create an item unavailable");
             throw new NotAvailableItemException();
         }
-        if (userRepository.findAll().stream().noneMatch(x -> x.getId().equals(item.getOwnerId()))) {
+        if (!userRepository.findById(item.getOwnerId()).isPresent()) {
             log.warn("User with id " + item.getOwnerId() + " not exist, can't create item");
             throw new UserNotFoundException();
         }
@@ -118,20 +119,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getItems(Long userId) {
+    public List<ItemDto> getItems(Long userId, Pageable pageable) {
         log.debug("Received list of items by user id: " + userId);
         if (userId == null) {
-            return itemRepository.findAll().stream().map(itemMapper::toItemDto).collect(Collectors.toList());
+            return itemRepository.findAll(pageable).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
         } else {
-            return itemRepository.findAllByOwnerId(userId).stream().map(x -> itemToItemWithLastAndNextBooking(x)).collect(Collectors.toList());
+            return itemRepository.findByOwnerId(userId, pageable).stream().map(x -> itemToItemWithLastAndNextBooking(x)).collect(Collectors.toList());
         }
     }
 
     @Override
-    public List<ItemDto> searchItem(String text) {
+    public List<ItemDto> searchItem(String text, Pageable pageable) {
         log.debug("Received a list of things containing symbols:" + text);
         if (!text.isBlank()) {
-            return itemRepository.searchByText(text).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
+            return itemRepository.searchByText(text, pageable).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
         } else {
             return new ArrayList<ItemDto>();
         }
