@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
@@ -86,14 +84,12 @@ public class ItemServiceImpl implements ItemService {
         if (newItem.isPresent()) {
             if (newItem.get().getOwnerId().equals(userId)) {
                 ItemDto itemDto = itemToItemWithLastAndNextBooking(newItem.get());
-                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream()
-                        .map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
+                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream().map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
                 log.debug("Received item with id: " + itemId);
                 return itemDto;
             } else {
                 ItemDto itemDto = itemMapper.toItemDto(newItem.get());
-                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream()
-                        .map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
+                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream().map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
                 log.debug("Received item with id: " + itemId);
                 return itemDto;
             }
@@ -106,11 +102,9 @@ public class ItemServiceImpl implements ItemService {
     private ItemDto itemToItemWithLastAndNextBooking(Item item) {
         ItemDto itemDto = itemMapper.toItemDto(item);
         List<Booking> bookingList = bookingRepository.findBookingsByItem(item);
-        Booking lastBooking = bookingList
-                .stream().filter(x -> x.getStart().isBefore(LocalDateTime.now())).findFirst().orElse(null);
+        Booking lastBooking = bookingList.stream().filter(x -> x.getStart().isBefore(LocalDateTime.now())).findFirst().orElse(null);
         ItemBookingDto lastBookingDto = bookingMapper.toItemBookingDto(lastBooking);
-        Booking nextBooking = bookingList
-                .stream().filter(x -> x.getStart().isAfter(LocalDateTime.now())).findFirst().orElse(null);
+        Booking nextBooking = bookingList.stream().filter(x -> x.getStart().isAfter(LocalDateTime.now())).findFirst().orElse(null);
         ItemBookingDto nextBookingDto = bookingMapper.toItemBookingDto(nextBooking);
 
         itemDto.setLastBooking(lastBookingDto);

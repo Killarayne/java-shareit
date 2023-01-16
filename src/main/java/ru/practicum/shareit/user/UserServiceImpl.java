@@ -3,7 +3,6 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exceptions.UserNotFoundException;
 
 import java.util.List;
@@ -13,7 +12,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
@@ -66,6 +64,5 @@ public class UserServiceImpl implements UserService {
         log.debug("Received all users");
         return repository.findAll().stream().map(userMapper::toUserDto).collect(Collectors.toList());
     }
-
 
 }

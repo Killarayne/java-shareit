@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.shareit.item.model.Item;
 
 import java.time.LocalDateTime;
@@ -17,13 +18,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "FROM Item AS i " +
             "JOIN Booking AS b ON b.item.id = i.id " +
             "JOIN User AS u ON b.booker.id = u.id " +
-            "WHERE i.ownerId = ?1")
-    List<Booking> findBookingsByOwnerId(Long userId, Pageable pageable);
+            "WHERE i.ownerId = :userId")
+    List<Booking> findBookingsByOwnerId(@Param("userId") Long userId, Pageable pageable);
 
     List<Booking> findBookingsByItem(Item item);
 
-    @Query(value = "SELECT COUNT (b) FROM Booking b WHERE b.status <> 'REJECTED' AND b.item.id = ?1")
-    Integer findBookingsCountByItemIdWhereStatusIsNotRejected(Long itemId);
+    @Query(value = "SELECT COUNT (b) FROM Booking b WHERE b.status <> 'REJECTED' AND b.item.id = :itemId")
+    Integer findBookingsCountByItemIdWhereStatusIsNotRejected(@Param("itemId") Long itemId);
 
     List<Booking> findBookingsByItemIdAndStartIsAfterOrderByStartAsc(Long itemId, LocalDateTime time);
 
