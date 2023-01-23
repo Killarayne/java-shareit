@@ -13,55 +13,55 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotExistUser(final UserNotFoundException e) {
-        return new ErrorResponse("User not found.");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotExistItemRequest(final ItemRequestNotFoundException e) {
-        return new ErrorResponse("ItemRequest not found.");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotExistBooking(final BookingNotExistException e) {
-        return new ErrorResponse("Booking not exist.");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotExistItem(final ItemNotExistsException e) {
-        return new ErrorResponse("Item is not exist");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleNotAvailable(final NotAvailableItemException e) {
-        return new ErrorResponse("Item is unavailable.");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleWrongTextOfComment(final WrongTextOfCommentException e) {
-        return new ErrorResponse("Comment text can't be blank");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleWrongBookingStatus(final WrongBookingStatusException e) {
-        return new ErrorResponse("Wrong booking status.");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleWrongTime(final WrongTimeException e) {
-        return new ErrorResponse("Wrong time.");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIncorrectCreatorOfComment(final IncorrectCreatorOfComment e) {
-        return new ErrorResponse("Incorrect creator of comment.");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exceptions.UserNotFoundException;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,31 +25,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto updateUser(long userId, UserDto userDto) {
         User user = userMapper.toModel(userDto);
-        Optional<User> updatedUser = repository.findById(userId);
-        if (updatedUser.isEmpty()) {
-            log.warn("User is not exist");
-            throw new UserNotFoundException();
-        }
+        User updatedUser = repository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with id: " + userId + " is not exist"));
         if (user.getEmail() != null)
-            updatedUser.get().setEmail(user.getEmail());
+            updatedUser.setEmail(user.getEmail());
 
         if (user.getName() != null)
-            updatedUser.get().setName(user.getName());
+            updatedUser.setName(user.getName());
 
-        repository.save(updatedUser.get());
-        log.debug("user with email " + updatedUser.get().getEmail() + " updated");
-        return userMapper.toUserDto(updatedUser.get());
+        repository.save(updatedUser);
+        log.debug("user with email " + updatedUser.getEmail() + " updated");
+        return userMapper.toUserDto(updatedUser);
     }
 
     @Override
     public UserDto getUser(long userId) {
-        Optional<User> user = repository.findById(userId);
-        if (user.isEmpty()) {
-            log.warn("User is not exist");
-            throw new UserNotFoundException();
-        }
+        User user = repository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with id: " + userId + " is not exist"));
         log.debug("Received user with id " + userId);
-        return userMapper.toUserDto(user.get());
+        return userMapper.toUserDto(user);
     }
 
     @Override

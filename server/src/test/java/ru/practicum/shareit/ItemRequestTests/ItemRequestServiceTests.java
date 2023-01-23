@@ -20,6 +20,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,7 +50,7 @@ public class ItemRequestServiceTests {
     ItemRequestDto itemRequestDto = new ItemRequestDto(1, "test description", LocalDateTime.now(), null);
     Item item = new Item(1, "item", "description of item", true, 1L, 1L);
     private final User john = new User(1L, "John", "john@doe.com");
-    ItemRequest itemRequest = new ItemRequest(1, "test description", john, LocalDateTime.now());
+    ItemRequest itemRequest = new ItemRequest(1, "test description", john, LocalDateTime.now(), Collections.emptyList());
 
     @Test
     void createRequestIfUserNotExist() {
@@ -82,7 +83,6 @@ public class ItemRequestServiceTests {
         List<ItemRequestDto> itemRequestDtoList = itemRequestService.getRequestsByRequestor(john.getId());
         verify(userRepository, times(1)).findById(anyLong());
         verify(itemRequestRepository, times(1)).findAllByRequestorId(anyLong());
-        verify(itemRepository, times(1)).findAllByRequestId(anyLong());
         assertThat(itemRequestDtoList, equalTo(itemRequestDtoList));
     }
 

@@ -19,11 +19,8 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @NotNull
     private long id;
-    @Column(name = "name")
     private String name;
-    @Column(name = "description")
     private String description;
-    @Column(name = "available")
     private Boolean available;
     @Column(name = "owner_id")
     private Long ownerId;

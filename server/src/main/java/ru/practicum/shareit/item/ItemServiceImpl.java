@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,11 +40,11 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemMapper.toModel(itemDto);
         if (!item.getAvailable()) {
             log.warn("Can't create an item unavailable");
-            throw new NotAvailableItemException();
+            throw new NotAvailableItemException("Can't create an item unavailable");
         }
-        if (!userRepository.findById(item.getOwnerId()).isPresent()) {
+        if (userRepository.findById(item.getOwnerId()).isEmpty()) {
             log.warn("User with id " + item.getOwnerId() + " not exist, can't create item");
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("User with id " + item.getOwnerId() + " not exist, can't create item");
         }
         log.debug("Created item :" + item.getName());
         return itemMapper.toItemDto(itemRepository.save(item));
@@ -53,51 +52,46 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateItem(long id, ItemDto itemDto) {
-        Optional<Item> newItem = itemRepository.findById(itemDto.getId());
-        if (!newItem.isPresent()) {
-            log.warn("Item is not exist");
-            throw new ItemNotExistsException();
-        }
-        if (newItem.get().getOwnerId() != id) {
+        Item newItem = itemRepository.findById(itemDto.getId())
+                .orElseThrow(() -> new ItemNotExistsException("Item with id not found" + itemDto.getId()));
+        if (newItem.getOwnerId() != id) {
             log.warn("User with id " + id + " not exist, can't create item");
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("User with id " + id + " not exist, can't create item");
         }
 
         if (itemDto.getAvailable() != null) {
-            newItem.get().setAvailable(itemDto.getAvailable());
+            newItem.setAvailable(itemDto.getAvailable());
         }
         if (itemDto.getName() != null) {
-            newItem.get().setName(itemDto.getName());
+            newItem.setName(itemDto.getName());
         }
 
         if (itemDto.getDescription() != null) {
-            newItem.get().setDescription(itemDto.getDescription());
+            newItem.setDescription(itemDto.getDescription());
         }
 
         log.debug("Updated item with id: " + itemDto.getId());
-        return itemMapper.toItemDto(itemRepository.save(newItem.get()));
+        return itemMapper.toItemDto(itemRepository.save(newItem));
 
     }
 
     @Override
     public ItemDto getItem(Long userId, Long itemId) {
-        Optional<Item> newItem = itemRepository.findById(itemId);
-        if (newItem.isPresent()) {
-            if (newItem.get().getOwnerId().equals(userId)) {
-                ItemDto itemDto = itemToItemWithLastAndNextBooking(newItem.get());
-                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream().map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
-                log.debug("Received item with id: " + itemId);
-                return itemDto;
-            } else {
-                ItemDto itemDto = itemMapper.toItemDto(newItem.get());
-                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream().map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
-                log.debug("Received item with id: " + itemId);
-                return itemDto;
-            }
+        Item newItem = itemRepository.findById(itemId).orElseThrow(() -> new ItemNotExistsException("Item with id not found" + itemId));
+        if (newItem.getOwnerId().equals(userId)) {
+            ItemDto itemDto = itemToItemWithLastAndNextBooking(newItem);
+            itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId())
+                    .stream().map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
+            log.debug("Received item with id: " + itemId);
+            return itemDto;
         } else {
-            log.warn("Item with id: " + itemId + " is not exist");
-            throw new ItemNotExistsException();
+            ItemDto itemDto = itemMapper.toItemDto(newItem);
+            itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId())
+                    .stream().map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
+            log.debug("Received item with id: " + itemId);
+            return itemDto;
         }
+
     }
 
     private ItemDto itemToItemWithLastAndNextBooking(Item item) {
@@ -119,7 +113,8 @@ public class ItemServiceImpl implements ItemService {
         if (userId == null) {
             return itemRepository.findAll(pageable).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
         } else {
-            List<ItemDto> itemDtos = itemRepository.findByOwnerId(userId, pageable).stream().map(x -> itemToItemWithLastAndNextBooking(x)).collect(Collectors.toList());
+            List<ItemDto> itemDtos = itemRepository.findByOwnerId(userId, pageable)
+                    .stream().map(x -> itemToItemWithLastAndNextBooking(x)).collect(Collectors.toList());
             itemDtos.sort(Comparator.comparing(ItemDto::getId));
             return itemDtos;
         }
@@ -131,38 +126,32 @@ public class ItemServiceImpl implements ItemService {
         if (!text.isBlank()) {
             return itemRepository.searchByText(text, pageable).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
         } else {
-            return new ArrayList<ItemDto>();
+            return new ArrayList<>();
         }
     }
 
     @Override
     public UserCommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
         Comment comment = commentMapper.toCommentModel(commentDto);
-
-        Optional<Item> item = itemRepository.findById(itemId);
-        Optional<User> user = userRepository.findById(userId);
-        if (!item.isPresent()) {
-            throw new ItemNotExistsException();
-        }
-        if (!user.isPresent()) {
-            throw new UserNotFoundException();
-        }
-        comment.setAuthor(user.get());
-        comment.setItem(item.get());
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new ItemNotExistsException("Item with id not found" + itemId));
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User with id not found" + itemId));
+        comment.setAuthor(user);
+        comment.setItem(item);
 
         if (bookingRepository.findBookingsCountByItemIdWhereStatusIsNotRejected(itemId) == 0) {
             log.warn("Can't create comment because not exists bookings with correct status");
-            throw new WrongBookingStatusException();
+            throw new WrongBookingStatusException("Can't create comment because not exists bookings with correct status");
         }
 
         if (comment.getText().isBlank()) {
             log.warn("Comment text can't be blank");
-            throw new WrongTextOfCommentException();
+            throw new WrongTextOfCommentException("Comment text can't be blank");
         }
 
-        if (!bookingRepository.findBookingsByItemIdAndStartIsAfterOrderByStartAsc(itemId, LocalDateTime.now()).stream().findFirst().get().getBooker().getId().equals(userId)) {
+        if (!bookingRepository.findBookingsByItemIdAndStartIsAfterOrderByStartAsc(itemId, LocalDateTime.now())
+                .stream().findFirst().get().getBooker().getId().equals(userId)) {
             log.warn("Can't create comment by booker if his booking after when next booking");
-            throw new IncorrectCreatorOfComment();
+            throw new IncorrectCreatorOfComment("Can't create comment by booker if his booking after when next booking");
         }
         log.debug("Created comment by user id: " + userId);
         return commentMapper.toUserCommentDto(commentRepository.save(comment));

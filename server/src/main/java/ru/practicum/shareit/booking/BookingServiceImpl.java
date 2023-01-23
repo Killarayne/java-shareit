@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -36,90 +35,74 @@ public class BookingServiceImpl implements BookingSerivce {
         booking.getBooker().setId(userId);
         booking.setStatus(Status.WAITING);
 
-        if (!userRepository.findById(userId).isPresent()) {
+        if (userRepository.findById(userId).isEmpty()) {
             log.warn("User with id: " + userId + "not exist");
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("User with id: " + userId + "not exist");
         }
 
-        Optional<Item> item = itemRepository.findById(booking.getItem().getId());
+        Item item = itemRepository.findById(booking.getItem().getId()).orElseThrow(() -> new ItemNotExistsException("Item with id not found" + booking.getItem().getId()));
 
-        if (!item.isPresent()) {
-            log.warn("Item is not exist");
-            throw new ItemNotExistsException();
-        }
-
-        if (item.get().getOwnerId().equals(userId)) {
+        if (item.getOwnerId().equals(userId)) {
             log.warn("Owner can't create booking");
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("Owner can't create booking");
         }
 
-        if (!item.get().getAvailable()) {
+        if (!item.getAvailable()) {
             log.warn("Can't create item with unavailable status");
-            throw new NotAvailableItemException();
+            throw new NotAvailableItemException("Can't create item with unavailable status");
         }
 
         if (booking.getEnd().isBefore(booking.getStart())) {
             log.warn("End time of booking can't be before start time");
-            throw new WrongTimeException();
+            throw new WrongTimeException("End time of booking can't be before start time");
         }
 
-        booking.setItem(item.get());
+        booking.setItem(item);
         log.debug("Booking added");
         return bookingMapper.toUserBookingDto(bookingRepository.save(booking));
     }
 
     @Override
     public UserBookingDto approve(Long userId, Long id, Boolean approve) {
-        Optional<Booking> booking = bookingRepository.findById(id);
-
-
-        if (booking.isPresent()) {
-            if (booking.get().getStatus().equals(Status.APPROVED)) {
-                log.warn("Can't approve booking with status approved");
-                throw new WrongBookingStatusException();
-            }
-            if (booking.get().getItem().getOwnerId().equals(userId)) {
-                if (approve) {
-                    log.debug("status checkout to approved");
-                    booking.get().setStatus(Status.APPROVED);
-                } else {
-                    log.debug("status checkout to rejected");
-                    booking.get().setStatus(Status.REJECTED);
-                }
+        Booking booking = bookingRepository.findById(id).orElseThrow(() -> new BookingNotExistException("Booking is not exist"));
+        if (booking.getStatus().equals(Status.APPROVED)) {
+            log.warn("Can't approve booking with status approved");
+            throw new WrongBookingStatusException("Can't approve booking with status approved");
+        }
+        if (booking.getItem().getOwnerId().equals(userId)) {
+            if (approve) {
+                log.debug("status checkout to approved");
+                booking.setStatus(Status.APPROVED);
             } else {
-                log.warn("Booking can't approve by not owner");
-                throw new UserNotFoundException();
+                log.debug("status checkout to rejected");
+                booking.setStatus(Status.REJECTED);
             }
         } else {
-            log.warn("Booking is not exist");
-            throw new BookingNotExistException();
+            log.warn("Booking can't approve by not owner");
+            throw new UserNotFoundException("Booking can't approve by not owner");
         }
+
         log.debug("Booking approved");
-        return bookingMapper.toUserBookingDto(bookingRepository.save(booking.get()));
+        return bookingMapper.toUserBookingDto(bookingRepository.save(booking));
     }
 
     @Override
     public UserBookingDto getBooking(Long userId, Long bookingId) {
-        Optional<Booking> booking = bookingRepository.findById(bookingId);
-        if (!booking.isPresent()) {
-            log.warn("Booking is not exist");
-            throw new BookingNotExistException();
-        }
-
-        if (booking.get().getBooker().getId().equals(userId) || booking.get().getItem().getOwnerId().equals(userId)) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotExistException("Booking is not exist"));
+        if (booking.getBooker().getId().equals(userId) || booking.getItem().getOwnerId().equals(userId)) {
             log.debug("Received booking with id: " + bookingId);
-            return bookingMapper.toUserBookingDto(booking.get());
+            return bookingMapper.toUserBookingDto(booking);
         } else {
             log.warn("Booking can be received only by booker or owner");
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("Booking can be received only by booker or owner");
         }
     }
 
     @Override
     public List<UserBookingDto> getBookingsByBooker(Long userId, State state, Pageable pageable) {
-        if (!userRepository.findById(userId).isPresent()) {
+        if (userRepository.findById(userId).isEmpty()) {
             log.warn("Booker is not found");
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("Booker is not found");
         }
         log.debug("Received bookings by booker id: " + userId);
 
@@ -133,9 +116,9 @@ public class BookingServiceImpl implements BookingSerivce {
 
     @Override
     public List<UserBookingDto> getBookingsByOwner(Long ownerId, State state, Pageable pageable) {
-        if (!userRepository.findById(ownerId).isPresent()) {
+        if (userRepository.findById(ownerId).isEmpty()) {
             log.warn("Owner is not found");
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("Owner is not found");
         }
 
         if (state.equals(State.ALL)) {
