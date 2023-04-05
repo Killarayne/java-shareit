@@ -15,6 +15,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService service;
+    private final UserMapper userMapper;
 
     @PostMapping
     public UserDto createUser(@Validated({Create.class}) @RequestBody UserDto userDto) {
@@ -40,6 +41,5 @@ public class UserController {
     public List<UserDto> getUsers() {
         return service.getUsers();
     }
-
 
 }

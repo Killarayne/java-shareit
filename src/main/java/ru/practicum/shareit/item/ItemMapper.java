@@ -11,5 +11,4 @@ public interface ItemMapper {
 
     Item toModel(ItemDto itemDto);
 
-
 }
