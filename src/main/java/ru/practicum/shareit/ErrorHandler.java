@@ -11,15 +11,15 @@ import ru.practicum.shareit.exceptions.*;
 public class ErrorHandler {
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleExistUser(final UserAlreadyExistException e) {
-        return new ErrorResponse("User already exists.");
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNotExistUser(final UserNotFoundException e) {
+        return new ErrorResponse("User not found.");
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleNotExistUser(final UserNotFoundException e) {
-        return new ErrorResponse("User not found.");
+    public ErrorResponse handleNotExistItemRequest(final ItemRequestNotFoundException e) {
+        return new ErrorResponse("ItemRequest not found.");
     }
 
     @ExceptionHandler
@@ -70,4 +70,5 @@ public class ErrorHandler {
     public ErrorResponse handleIllegalArgumentException() {
         return new ErrorResponse("Unknown state: UNSUPPORTED_STATUS");
     }
+
 }

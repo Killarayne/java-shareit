@@ -2,8 +2,8 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingRepository;
@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
@@ -43,7 +42,7 @@ public class ItemServiceImpl implements ItemService {
             log.warn("Can't create an item unavailable");
             throw new NotAvailableItemException();
         }
-        if (userRepository.findAll().stream().noneMatch(x -> x.getId().equals(item.getOwnerId()))) {
+        if (!userRepository.findById(item.getOwnerId()).isPresent()) {
             log.warn("User with id " + item.getOwnerId() + " not exist, can't create item");
             throw new UserNotFoundException();
         }
@@ -85,14 +84,12 @@ public class ItemServiceImpl implements ItemService {
         if (newItem.isPresent()) {
             if (newItem.get().getOwnerId().equals(userId)) {
                 ItemDto itemDto = itemToItemWithLastAndNextBooking(newItem.get());
-                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream()
-                        .map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
+                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream().map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
                 log.debug("Received item with id: " + itemId);
                 return itemDto;
             } else {
                 ItemDto itemDto = itemMapper.toItemDto(newItem.get());
-                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream()
-                        .map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
+                itemDto.setComments(commentRepository.findAllByItemId(itemDto.getId()).stream().map(commentMapper::toUserCommentDto).collect(Collectors.toList()));
                 log.debug("Received item with id: " + itemId);
                 return itemDto;
             }
@@ -105,11 +102,9 @@ public class ItemServiceImpl implements ItemService {
     private ItemDto itemToItemWithLastAndNextBooking(Item item) {
         ItemDto itemDto = itemMapper.toItemDto(item);
         List<Booking> bookingList = bookingRepository.findBookingsByItem(item);
-        Booking lastBooking = bookingList
-                .stream().filter(x -> x.getStart().isBefore(LocalDateTime.now())).findFirst().orElse(null);
+        Booking lastBooking = bookingList.stream().filter(x -> x.getStart().isBefore(LocalDateTime.now())).findFirst().orElse(null);
         ItemBookingDto lastBookingDto = bookingMapper.toItemBookingDto(lastBooking);
-        Booking nextBooking = bookingList
-                .stream().filter(x -> x.getStart().isAfter(LocalDateTime.now())).findFirst().orElse(null);
+        Booking nextBooking = bookingList.stream().filter(x -> x.getStart().isAfter(LocalDateTime.now())).findFirst().orElse(null);
         ItemBookingDto nextBookingDto = bookingMapper.toItemBookingDto(nextBooking);
 
         itemDto.setLastBooking(lastBookingDto);
@@ -118,20 +113,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getItems(Long userId) {
+    public List<ItemDto> getItems(Long userId, Pageable pageable) {
         log.debug("Received list of items by user id: " + userId);
         if (userId == null) {
-            return itemRepository.findAll().stream().map(itemMapper::toItemDto).collect(Collectors.toList());
+            return itemRepository.findAll(pageable).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
         } else {
-            return itemRepository.findAllByOwnerId(userId).stream().map(x -> itemToItemWithLastAndNextBooking(x)).collect(Collectors.toList());
+            return itemRepository.findByOwnerId(userId, pageable).stream().map(x -> itemToItemWithLastAndNextBooking(x)).collect(Collectors.toList());
         }
     }
 
     @Override
-    public List<ItemDto> searchItem(String text) {
+    public List<ItemDto> searchItem(String text, Pageable pageable) {
         log.debug("Received a list of things containing symbols:" + text);
         if (!text.isBlank()) {
-            return itemRepository.searchByText(text).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
+            return itemRepository.searchByText(text, pageable).stream().map(itemMapper::toItemDto).collect(Collectors.toList());
         } else {
             return new ArrayList<ItemDto>();
         }

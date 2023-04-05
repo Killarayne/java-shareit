@@ -2,8 +2,8 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.UserBookingDto;
 import ru.practicum.shareit.exceptions.*;
@@ -13,6 +13,7 @@ import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -21,15 +22,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-@Transactional
 public class BookingServiceImpl implements BookingSerivce {
 
     private final BookingRepository bookingRepository;
-
     private final ItemRepository itemRepository;
-
     private final BookingMapper bookingMapper;
-
     private final UserRepository userRepository;
 
     @Override
@@ -55,7 +52,6 @@ public class BookingServiceImpl implements BookingSerivce {
             log.warn("Owner can't create booking");
             throw new UserNotFoundException();
         }
-
 
         if (!item.get().getAvailable()) {
             log.warn("Can't create item with unavailable status");
@@ -119,27 +115,34 @@ public class BookingServiceImpl implements BookingSerivce {
         }
     }
 
-
     @Override
-    public List<UserBookingDto> getBookingsByBooker(Long userId, State state) {
+    public List<UserBookingDto> getBookingsByBooker(Long userId, State state, Pageable pageable) {
         if (!userRepository.findById(userId).isPresent()) {
             log.warn("Booker is not found");
             throw new UserNotFoundException();
         }
         log.debug("Received bookings by booker id: " + userId);
-        return mapListToListWithState(bookingRepository.findBookingsByBooker_Id(userId), state)
+
+        if (state.equals(State.ALL)) {
+            return bookingRepository.findAllByBookerIdOrderByStartDesc(userId, pageable).stream().map(bookingMapper::toUserBookingDto).collect(Collectors.toList());
+        }
+        return mapListToListWithState(bookingRepository.findBookingsByBookerId(userId, pageable), state)
                 .stream().map(bookingMapper::toUserBookingDto).collect(Collectors.toList());
 
     }
 
     @Override
-    public List<UserBookingDto> getBookingsByOwner(Long ownerId, State state) {
+    public List<UserBookingDto> getBookingsByOwner(Long ownerId, State state, Pageable pageable) {
         if (!userRepository.findById(ownerId).isPresent()) {
             log.warn("Owner is not found");
             throw new UserNotFoundException();
         }
+
+        if (state.equals(State.ALL)) {
+            return bookingRepository.findAllByItemOwnerIdOrderByStartDesc(ownerId, pageable).stream().map(bookingMapper::toUserBookingDto).collect(Collectors.toList());
+        }
         log.debug("Received bookings by owner id: " + ownerId);
-        return mapListToListWithState(bookingRepository.findBookingsByOwner_Id(ownerId), state)
+        return mapListToListWithState(bookingRepository.findBookingsByOwnerId(ownerId, pageable), state)
                 .stream().map(bookingMapper::toUserBookingDto).collect(Collectors.toList());
     }
 
@@ -165,11 +168,10 @@ public class BookingServiceImpl implements BookingSerivce {
                 return listToMap.stream()
                         .filter(x -> x.getStatus().equals(Status.REJECTED))
                         .sorted(Comparator.comparing(Booking::getStart).reversed()).collect(Collectors.toList());
-            default:
-                return listToMap.stream()
-                        .sorted(Comparator.comparing(Booking::getStart).reversed()).collect(Collectors.toList());
 
         }
+
+        return new ArrayList<>();
     }
 
 }
